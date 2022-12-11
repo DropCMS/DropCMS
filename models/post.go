@@ -21,10 +21,15 @@ type Post struct {
 }
 
 func (p Post) Create() error {
-	if len(p.Title) == 0 && len(p.Slug) == 0 && p.UserId == 0 {
+	if len(p.Title) == 0 {
 		return errors.New("Invalid input.")
 	}
-
+	if len(p.Slug) == 0 {
+		return errors.New("Invalid input.")
+	}
+	if p.UserId == 0 {
+		return errors.New("Invalid input.")
+	}
 	query := "INSERT INTO posts(title, description, slug, userId, parentId, published, content, publishedAt, updatedAt) VALUES (?,?,?,?,?,?,?,?,?)"
 	tim := new(Time)
 	if p.Published {
@@ -60,6 +65,6 @@ func GetPostById(slug string) (Post, error) {
 	if eror != nil {
 		return Post{}, eror
 	}
-//Add tag support ???
+	//Add tag support ???
 	return Post{}, nil
 }

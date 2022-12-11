@@ -19,7 +19,7 @@ func RegisterUser(c *fiber.Ctx) error {
 		})
 	}
 	data, errorr := user.Get()
-	if errorr != nil && errorr == sql.ErrNoRows {
+	if errorr != nil && errorr != sql.ErrNoRows{
 		return c.JSON(fiber.Map{
 			"err": errorr.Error(),
 		})
@@ -48,6 +48,11 @@ func LoginUser(c *fiber.Ctx) error {
 	}
 	data, err := user.Get()
 	if err != nil {
+    if err == sql.ErrNoRows {
+      return c.JSON(fiber.Map{
+        "err" : "No account matched with this username.",
+      })
+    }
 		return c.JSON(fiber.Map{
 			"err": err.Error(),
 		})
@@ -64,6 +69,7 @@ func LoginUser(c *fiber.Ctx) error {
 	claims["exp"] = time.Now().Add(1 * time.Hour)
 	claims["username"] = users.Username
 	claims["email"] = users.Email
+  claims["user_id"] = user.Id
 
 	t, tErr := token.SignedString([]byte("mypasswordaaltufaltukhaopio"))
 	if tErr != nil {
