@@ -2,7 +2,7 @@ package main
 
 import (
 	"dropCms/db"
-	"dropCms/router"
+	router "dropCms/router/api"
 
 	"github.com/gofiber/fiber/v2"
 )
