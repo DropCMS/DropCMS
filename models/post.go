@@ -20,15 +20,15 @@ type Post struct {
 	Categories  []string `json:"categories"`
 }
 
-func (p Post) Create() error {
+func (p Post) Create() (interface{}, error) {
 	if len(p.Title) == 0 {
-		return errors.New("Invalid input.")
+		return nil, errors.New("Invalid input.")
 	}
 	if len(p.Slug) == 0 {
-		return errors.New("Invalid input.")
+		return nil, errors.New("Invalid input.")
 	}
 	if p.UserId == 0 {
-		return errors.New("Invalid input.")
+		return nil, errors.New("Invalid input.")
 	}
 	query := "INSERT INTO posts(title, description, slug, userId, parentId, published, content, publishedAt, updatedAt) VALUES (?,?,?,?,?,?,?,?,?)"
 	tim := new(Time)
@@ -40,15 +40,16 @@ func (p Post) Create() error {
 	defer cancelCtx()
 	stmt, err := db.Db.PrepareContext(ctx, query)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer stmt.Close()
 
-	_, errr := stmt.ExecContext(ctx, p.Title, utils.NullString(p.Description), p.Slug, p.UserId, utils.NullInt(p.ParentId), p.Published, utils.NullString(p.Content), utils.NullTime(tim.PublishedAt), utils.NullTime(tim.UpdatedAt))
+	res, errr := stmt.ExecContext(ctx, p.Title, utils.NullString(p.Description), p.Slug, p.UserId, utils.NullInt(p.ParentId), p.Published, utils.NullString(p.Content), utils.NullTime(tim.PublishedAt), utils.NullTime(tim.UpdatedAt))
 	if errr != nil {
-		return errr
+		return nil, errr
 	}
-	return nil
+	insertId, _ := res.LastInsertId()
+	return insertId, nil
 }
 
 func GetPostById(slug string) (Post, error) {

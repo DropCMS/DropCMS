@@ -16,9 +16,9 @@ type Tag struct {
 	Content string `json:"content"`
 }
 
-func (t Tag) Create() error {
+func (t Tag) Create() (interface{}, error) {
 	if len(t.Name) < 3 {
-		return errors.New("tag's name is too short.")
+		return nil, errors.New("tag's name is too short.")
 	}
 	if len(t.Slug) == 0 {
 		slug := strings.ReplaceAll(t.Name, "", "-")
@@ -26,16 +26,36 @@ func (t Tag) Create() error {
 	}
 
 	query := "INSERT INTO tags(name, slug, content) VALUES (?,?,?)"
-	ctx, cancelCtx := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancelCtx := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancelCtx()
 	stmt, err := db.Db.PrepareContext(ctx, query)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer stmt.Close()
-	_, execErr := stmt.ExecContext(ctx, t.Name, t.Slug, utils.NullString(t.Content))
+	res, execErr := stmt.ExecContext(ctx, t.Name, t.Slug, utils.NullString(t.Content))
 	if execErr != nil {
-		return execErr
+		return nil, execErr
 	}
-	return nil
+	id, eror := res.LastInsertId()
+	if eror != nil {
+		return nil, eror
+	}
+	return id, nil
+}
+
+func MakeAssociationWithTag(postId, tagId uint) error {
+	query := "INSERT INTO post_tags(post_id, tag_id) VALUES (?,?)"
+	ctx, cancelCtx := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancelCtx()
+  stmt, err := db.Db.PrepareContext(ctx, query)
+  if err != nil {
+    return err
+  }
+  defer stmt.Close()
+  _, errorr := stmt.ExecContext(ctx, postId, tagId)
+  if errorr != nil {
+    return errorr
+  }
+  return nil
 }
