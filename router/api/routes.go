@@ -9,4 +9,5 @@ import (
 func Routes(f fiber.Router) {
 	f.Post("/register", handlers.RegisterUser)
 	f.Post("/login", handlers.LoginUser)
+  f.Post("/createpost", handlers.CreatePost)
 }

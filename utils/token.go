@@ -2,16 +2,18 @@ package utils
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 )
 
+var SuccessHandler fiber.Handler
+var ErrHandler fiber.Handler
+
 func Authorize(c *fiber.Ctx) error {
 	hh := c.Cookies("access_token")
 	if hh == "" {
-		return c.SendStatus(fiber.StatusUnauthorized)
+		return c.Redirect("/admin/login")
 	}
 	token, err := jwt.Parse(hh, func(t *jwt.Token) (interface{}, error) {
 		_, ok := t.Method.(*jwt.SigningMethodHMAC)
@@ -27,31 +29,25 @@ func Authorize(c *fiber.Ctx) error {
 		c.Locals("users", token)
 		return c.Next()
 	}
-	return c.SendStatus(fiber.StatusForbidden)
+	return c.Redirect("/admin/login")
 }
 
-func AuthorizeFromHeader(c *fiber.Ctx) error {
-	hh := c.Get("Authorization")
-	ll := len("Bearer")
-	if len(hh) > ll+1 && strings.EqualFold(hh[:ll], "Bearer") {
-		tkn := strings.TrimSpace(hh[ll:])
-		token, jtErr := jwt.Parse(tkn, func(t *jwt.Token) (interface{}, error) {
-			_, ok := t.Method.(*jwt.SigningMethodHMAC)
-			if !ok {
-				return nil, errors.New("wrong parsing method.")
-			}
-			return []byte("mypasswordaaltufaltukhaopio"), nil
+func Parse(token string, c *fiber.Ctx) (tt *jwt.Token) {
+  toke, errorr := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
+    _,ok := t.Method.(*jwt.SigningMethodHMAC)
 
-		})
-		if jtErr != nil {
-			return c.JSON(fiber.Map{"err": jtErr.Error()})
-		}
-		if token.Valid {
-			c.Locals("users", token)
-			return c.Next()
-		}
-		return c.SendStatus(fiber.StatusForbidden)
-
-	}
-	return c.SendStatus(fiber.StatusUnauthorized)
-}
+    if !ok {
+      return nil, errors.New("wrong parsing method")
+    }
+    return []byte("mypasswordaaltufaltukhaopio"), nil
+  })
+  if errorr != nil {
+    c.JSON(fiber.Map{
+      "err" : errorr.Error(),
+    })
+  }
+  if toke.Valid {
+    return toke
+  }
+  return nil
+} 
