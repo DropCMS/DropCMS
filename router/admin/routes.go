@@ -1,7 +1,12 @@
 package router
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"dropCms/handlers/pages"
+
+	"github.com/gofiber/fiber/v2"
+)
 
 func SetupAdminRoutes(r fiber.Router) {
-  r.Get("/");
+  r.Get("/", handlers.Index)
+  r.Get("/login", handlers.Login)
 }
